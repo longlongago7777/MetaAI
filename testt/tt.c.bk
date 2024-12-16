@@ -1,0 +1,139 @@
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include <regex.h>
+
+#define HOST_MAX_LENGTH 16
+#define PORT_MAX_LENGTH 6
+#define SERVICE_NAME_MAX_LENGTH 32
+
+
+
+
+void parConn()
+{
+    const char *input = "(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=10.2.103.249)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=XE)))";
+    char host[HOST_MAX_LENGTH] = {0};
+    char port[PORT_MAX_LENGTH] = {0};
+    char service_name[SERVICE_NAME_MAX_LENGTH] = {0};
+    char *ptr;
+
+    // 解析 HOST
+    ptr = strstr(input, "HOST=");
+    if (ptr) {
+        ptr += 5; // 跳过 "HOST=" 的长度
+        strncpy(host, ptr, strchr(ptr, ')') - ptr);
+        host[strcspn(host, ")")] = 0; // 去除尾部的 ')'
+    }
+
+    // 解析 PORT
+    ptr = strstr(input, "PORT=");
+    if (ptr) {
+        ptr += 5; // 跳过 "PORT=" 的长度
+        strncpy(port, ptr, strchr(ptr, ')') - ptr);
+        port[strcspn(port, ")")] = 0; // 去除尾部的 ')'
+    }
+
+    // 解析 SERVICE_NAME
+    ptr = strstr(input, "SERVICE_NAME=");
+    if (ptr) {
+        ptr += 13; // 跳过 "SERVICE_NAME=" 的长度
+        strncpy(service_name, ptr, strchr(ptr, ')') - ptr);
+        service_name[strcspn(service_name, ")")] = 0; // 去除尾部的 ')'
+    }
+
+    // 打印结果
+    printf("Host: %s\n", host[0] ? host : "Not found");
+    printf("Port: %s\n", port[0] ? port : "Not found");
+    printf("Service Name: %s\n", service_name[0] ? service_name : "Not found");
+
+}
+
+/*char* str_replace(const char* original, const char* pattern, const char* replacement) {
+    char *result; // 用于存放结果的字符串
+    int i, count = 0; // 计数器，用于计算替换次数
+    int pat_len = strlen(pattern);
+    int rep_len = strlen(replacement);
+    int str_len = strlen(original);
+
+    // 首次遍历，计算需要替换的次数
+    for (i = 0; i <= str_len - pat_len; i++) {
+        if (strncmp(&original[i], pattern, pat_len) == 0) {
+            count++;
+            i += pat_len - 1;
+        }
+    }
+
+    // 分配足够的内存来存放结果字符串
+    result = (char*)malloc(sizeof(char) * (str_len + count * (rep_len - pat_len) + 1));
+    if (result == NULL) return NULL;
+
+    // 第二次遍历，执行替换
+    {
+        char *p = result;
+        int j;
+        for (i = 0, j = 0; i <= str_len - pat_len; i++) {
+            if (strncmp(&original[i], pattern, pat_len) == 0) {
+                strcpy(p, replacement);
+                p += rep_len;
+                i += pat_len - 1;
+            } else {
+                *p = original[j];
+                p++;
+                j++;
+            }
+        }
+        // 复制剩余的字符串
+        strcpy(p, &original[j]);
+    }
+    return result;
+}*/
+
+int main() {
+    //parConn();
+  char sql[] = "INSERT INTO emp(empno, ename, job, sal, deptno) VALUES (:empno, :ename, :job, :sal, :deptno)";
+    regex_t regex;
+    regmatch_t matches[1];
+    char result[1024]; // 确保这个数组足够大以存储最终的字符串
+    char *pattern = "(:[a-zA-Z0-9_]+)"; // 匹配形如 :name 的命名占位符
+    char *replacement = "?"; // 替换为匿名占位符 ?
+
+    // 编译正则表达式
+    if (regcomp(&regex, pattern, REG_EXTENDED) != 0) {
+        fprintf(stderr, "Could not compile regex\n");
+        return 1;
+    }
+
+    // 查找并替换所有匹配项
+    char *cursor = sql;
+    while (regexec(&regex, cursor, 1, matches, 0) == 0) {
+        size_t match_start = matches[0].rm_so;
+        size_t match_end = matches[0].rm_eo;
+        size_t len_before_match = match_start;
+
+        // 将匹配前的字符串复制到结果中
+        strncpy(result, sql, len_before_match);
+        result[len_before_match] = '\0';
+
+        // 添加替换字符串
+        strcat(result, replacement);
+
+        // 更新游标位置
+        cursor += match_end;
+        sql += len_before_match + (cursor - sql);
+    }
+
+    // 添加剩余的字符串
+    strcat(result, sql);
+
+    // 输出替换后的SQL语句
+    printf("Modified SQL: %s\n", result);
+
+    // 释放正则表达式
+    regfree(&regex);	
+
+
+
+
+	return 0;
+}

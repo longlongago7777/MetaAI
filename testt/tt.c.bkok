@@ -1,0 +1,64 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+int main() {
+    const char *input = "(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=10.2.103.249)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=XE)))";
+    char *host = NULL;
+    char *port = NULL;
+    char *service_name = NULL;
+    char *ptr;
+    int host_len, port_len, service_name_len;
+
+    // 解析 HOST
+    ptr = strstr(input, "HOST=");
+    if (ptr) {
+        ptr += 5; // 跳过 "HOST=" 的长度
+        host_len = strchr(ptr, ')') - ptr;
+        host = (char *)malloc(host_len + 1);
+        if (host) {
+            strncpy(host, ptr, host_len);
+            host[host_len] = '\0';
+        }
+    }
+
+    // 解析 PORT
+    ptr = strstr(input, "PORT=");
+    if (ptr) {
+        ptr += 5; // 跳过 "PORT=" 的长度
+        port_len = strchr(ptr, ')') - ptr;
+        port = (char *)malloc(port_len + 1);
+        if (port) {
+            strncpy(port, ptr, port_len);
+            port[port_len] = '\0';
+        }
+    }
+
+    // 解析 SERVICE_NAME
+    ptr = strstr(input, "SERVICE_NAME=");
+    if (ptr) {
+        ptr += 13; // 跳过 "SERVICE_NAME=" 的长度
+        service_name_len = strchr(ptr, ')') - ptr;
+        service_name = (char *)malloc(service_name_len + 1);
+        if (service_name) {
+            strncpy(service_name, ptr, service_name_len);
+            service_name[service_name_len] = '\0';
+        }
+    }
+
+    // 打印结果
+    if (host) {
+        printf("Host: %s\n", host);
+        free(host); // 释放分配的内存
+    }
+    if (port) {
+        printf("Port: %s\n", port);
+        free(port); // 释放分配的内存
+    }
+    if (service_name) {
+        printf("Service Name: %s\n", service_name);
+        free(service_name); // 释放分配的内存
+    }
+
+    return 0;
+}
