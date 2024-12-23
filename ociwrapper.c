@@ -543,53 +543,54 @@ sword   OCIBindByName   (OCIStmt *stmtp, OCIBind **bindp, OCIError *errhp,
                          ub4 maxarr_len, ub4 *curelep, ub4 mode)
 {
 	
-    memset(&bindByname[bindbnCnt], 0, sizeof(bindByname[bindbnCnt]));
     int bindIdx=0;
 
    //find the index through  name  in based on  parsesql 
-   for (int i = 0; i < MAX_FIELDS; ++i) {
-        if (strstr(stmtF[i].fields, placeholder) != NULL) {
+   for (int i = 0; i < bindFNUM; ++i) {
+        printf("stmtF[i].fields=%s, placeholder = %s index i= %d\n", stmtF[i].fields, placeholder,i);
+        if (stristr(stmtF[i].fields, placeholder) != NULL) {
             bindIdx = stmtF[i].indexno;
+	    printf("bindIdx = %d \n", bindIdx);
             break; // 找到后退出循环
         }
     }
 
+    memset(&bindByname[bindIdx], 0, sizeof(bindByname[bindIdx]));
     switch (dty) {
     case SQLT_INT:
-        bindByname[bindbnCnt].buffer_type = MYSQL_TYPE_LONG;
-        bindByname[bindbnCnt].buffer = (int *)valuep;
-        bindByname[bindbnCnt].buffer_length = value_sz;
+        bindByname[bindIdx].buffer_type = MYSQL_TYPE_LONG;
+        bindByname[bindIdx].buffer = (int *)valuep;
+        bindByname[bindIdx].buffer_length = value_sz;
         break;
     case SQLT_FLT:
-        bindByname[bindbnCnt].buffer_type = MYSQL_TYPE_FLOAT;
-        bindByname[bindbnCnt].buffer = (float *)valuep;
-        bindByname[bindbnCnt].buffer_length = value_sz;
+        bindByname[bindIdx].buffer_type = MYSQL_TYPE_FLOAT;
+        bindByname[bindIdx].buffer = (float *)valuep;
+        bindByname[bindIdx].buffer_length = value_sz;
         break;
     case SQLT_STR:
-        bindByname[bindbnCnt].buffer_type = MYSQL_TYPE_STRING;
-        bindByname[bindbnCnt].buffer = (char *)valuep;
-        bindByname[bindbnCnt].buffer_length = value_sz;
+        bindByname[bindIdx].buffer_type = MYSQL_TYPE_STRING;
+        bindByname[bindIdx].buffer = (char *)valuep;
+        bindByname[bindIdx].buffer_length = value_sz;
         break;
     case SQLT_LNG:
-        bindByname[bindbnCnt].buffer_type = MYSQL_TYPE_LONGLONG;
+        bindByname[bindIdx].buffer_type = MYSQL_TYPE_LONGLONG;
         break;
     case SQLT_DAT:
-        bindByname[bindbnCnt].buffer_type = MYSQL_TYPE_DATE;
+        bindByname[bindIdx].buffer_type = MYSQL_TYPE_DATE;
         break;
     case SQLT_TIMESTAMP:
-        bindByname[bindbnCnt].buffer_type = MYSQL_TYPE_TIMESTAMP;
+        bindByname[bindIdx].buffer_type = MYSQL_TYPE_TIMESTAMP;
         break;
     case SQLT_BLOB:
-        bindByname[bindbnCnt].buffer_type = MYSQL_TYPE_BLOB;
+        bindByname[bindIdx].buffer_type = MYSQL_TYPE_BLOB;
         break;
     case SQLT_CLOB:
-        bindByname[bindbnCnt].buffer_type = MYSQL_TYPE_STRING; // CLOB在MySQL中通常作为长文本处理
+        bindByname[bindIdx].buffer_type = MYSQL_TYPE_STRING; // CLOB在MySQL中通常作为长文本处理
         break;
     default:
-        bindByname[bindbnCnt].buffer_type = MYSQL_TYPE_STRING; // 默认类型
+        bindByname[bindIdx].buffer_type = MYSQL_TYPE_STRING; // 默认类型
         break;
     }
-
     //to know if all bind fields are done
     bindbnCnt++;
     printf("bindbnCnt=%d, bindFNUM = %d \n", bindbnCnt, bindFNUM);
@@ -609,7 +610,6 @@ sword   OCIBindByName   (OCIStmt *stmtp, OCIBind **bindp, OCIError *errhp,
 }
 
 
-//define the resultset 
 sword   OCIDefineByPos  (OCIStmt *stmtp, OCIDefine **defnp, OCIError *errhp,
                          ub4 position, void  *valuep, sb4 value_sz, ub2 dty,
                          void  *indp, ub2 *rlenp, ub2 *rcodep, ub4 mode)
